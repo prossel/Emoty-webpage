@@ -30,21 +30,28 @@
 # change to the directory where the script is located
 cd "$(dirname "$0")"
 
-# Run the WebSocket - Serial - Gateway in the background
-# python3 ../WebSocket-Serial-Gateway/gateway.py & 
+# Run the WebSocket-Serial-Gateway in the background
+echo "Starting WebSocket-Serial-Gateway ..."
+python3 ../WebSocket-Serial-Gateway/gateway.py & 
  
 # remember the PID of the http server to kill it later
-# gateway_pid=$!
+gateway_pid=$!
  
-
-
 # Run an http server in the background
+echo "Starting web server..."
 python3 -m http.server 5500 & 
  
 # remember the PID of the http server to kill it later
 http_server_pid=$!
- 
+sleep 1
+
+# Wait for servers to start
+echo "Waiting for everything to start..."
+sleep 5
+
 # launch chrome in kiosk mode in the foreground
+echo "Launching Chrome in kiosk mode..."
+
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
 --chrome-frame \
 --kiosk \
@@ -55,6 +62,6 @@ http_server_pid=$!
 kill $http_server_pid
  
 # kill the gateway after chrome is closed
-# kill $gateway_pid
+kill $gateway_pid
  
 echo done
