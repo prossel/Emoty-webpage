@@ -1,0 +1,53 @@
+<html>
+
+
+<body>
+  <script src="https://sdk.morphcast.com/mphtools/v1.1/mphtools.js" data-config="cameraPrivacyPopup, compatibilityUI, compatibilityAutoCheck"></script>
+  <script src="https://ai-sdk.morphcast.com/v1.16/ai-sdk.js"></script>
+  <script>
+  CY.loader()
+    .licenseKey("")
+    //.addModule(CY.modules().FACE_AROUSAL_VALENCE.name, {smoothness: 0.70})
+    .addModule(CY.modules().FACE_EMOTION.name, {smoothness: 0.40})
+    //.addModule(CY.modules().FACE_ATTENTION.name, {smoothness: 0.83})
+    //.addModule(CY.modules().FACE_DETECTOR.name, {maxInputFrameSize: 320, smoothness: 0.83})
+    //.addModule(CY.modules().DATA_AGGREGATOR.name, {initialWaitMs: 2000, periodMs: 1000})
+    .load()
+    .then(({ start, stop }) => start());
+  
+  
+  //window.addEventListener(CY.modules().EVENT_BARRIER.eventName, (evt) => {
+    //console.log('EVENT_BARRIER result', evt.detail);
+  //});
+  
+  //window.addEventListener(CY.modules().DATA_AGGREGATOR.eventName, (evt) => {
+//console.log('MY DATA_AGGREGATOR result', evt.detail);
+  //});
+
+  window.addEventListener(CY.modules().FACE_EMOTION.eventName, (evt) => {
+    //console.log('FACE_EMOTION result', evt.detail);
+      console.log('FACE_EMOTION result', evt.detail.output.dominantEmotion);
+      var emotion = evt.detail.output.dominantEmotion
+      document.getElementById("emotion").textContent = emotion;
+      if (emotion == "Happy") {
+
+      }
+
+  });
+  
+  MphTools.CameraPrivacyPopup.setText({
+     "title": "Allow us to use your camera",
+     "description": "This experience is designed to be viewed with your camera on. The next screen will ask your consent to access data from your camera.",
+     "url": "https://YOUR_DOMAIN/<YOUR_PRIVACY_POLICY>"
+  });
+  
+  </script>
+  
+  <!-- your body part -->
+  <p>you know what ? I am <span id="emotion"></span></p>
+  
+  </body>
+  
+</html>
+
+
