@@ -14,7 +14,16 @@
 
     // load config file
     fetch('config.json')
-      .then(response => response.json())
+      .then(response => { 
+        if (response.ok) {
+          return response.json();
+        }
+        else {
+          alert("Failed to load config file. \n\nDuplicate config_example.json and rename it to config.json. Fill in the API_KEY field with your API key.");
+          throw("Failed to load config file")
+        }
+
+      })
       .then(data => {
         var apiKey = data.API_KEY
 
