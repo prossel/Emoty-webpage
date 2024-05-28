@@ -7,19 +7,34 @@
   <script src="https://ai-sdk.morphcast.com/v1.16/ai-sdk.js"></script>
   <script>
 
+    var lastEmotionDetected = -1;
+    var lastEmotionSent = -1;
+    var lastEmotionDetectedTime = 0;
+    const emotionHold = 1500; // ms
+
     // load config file
     fetch('config.json')
       .then(response => response.json())
       .then(data => {
         var apiKey = data.API_KEY
 
+        // Connect to websocket
+        const socket = new WebSocket('ws://localhost:8765');
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+          console.log("Socket opened")
+          //socket.send('Hello Server!');
+        });
+
+        // Listen for messages
+        socket.addEventListener('message', function (event) {
+          //console.log(event.data);
+        });
+
         CY.loader()
           .licenseKey(apiKey)
-          //.addModule(CY.modules().FACE_AROUSAL_VALENCE.name, {smoothness: 0.70})
           .addModule(CY.modules().FACE_EMOTION.name, { smoothness: 0.40 })
-          //.addModule(CY.modules().FACE_ATTENTION.name, {smoothness: 0.83})
-          //.addModule(CY.modules().FACE_DETECTOR.name, {maxInputFrameSize: 320, smoothness: 0.83})
-          //.addModule(CY.modules().DATA_AGGREGATOR.name, {initialWaitMs: 2000, periodMs: 1000})
           .load()
           .then(({ start, stop }) => start());
 
@@ -33,20 +48,42 @@
         //});
 
         window.addEventListener(CY.modules().FACE_EMOTION.eventName, (evt) => {
-          //console.log('FACE_EMOTION result', evt.detail);
-          console.log('FACE_EMOTION result', evt.detail.output.dominantEmotion);
+          //console.log('FACE_EMOTION result', evt.detail.output.dominantEmotion);
           var emotion = evt.detail.output.dominantEmotion
-          document.getElementById("emotion").textContent = emotion;
-          if (emotion == "Happy") {
 
+          // if undefined, return
+          if (emotion == undefined) {
+            return;
           }
 
           // convert emtion to number
-          var emotions = ["Neutral", "Happy", "Sad", "Surprise", "Disgust", "Scared", "Angry"];
+          var emotions = ["Neutral", "Happy", "Sad", "Surprise", "Disgust", "Fear", "Angry"];
           var iEmotion = emotions.indexOf(emotion);
+          
+          if (iEmotion == -1) {
+            console.log("Unknown emotion: " + emotion);
+            return;
+          }
+          
+          document.getElementById("emotion").innerHTML = emotion + " since " + ((Date.now() - lastEmotionDetectedTime) / 1000) + "s" + "<br>" +
+          "     lastSent: " + emotions[lastEmotionSent];
 
-          // Send this emotion to ardunio through websocket
-          socket.send(iEmotion);
+          // Check if the emotion is the same as the last one
+          if (iEmotion == lastEmotionDetected) {
+            
+            // Check if the emotion has been the same for more than 5 seconds, send only once
+            if (iEmotion != lastEmotionSent && Date.now() - lastEmotionDetectedTime > emotionHold) {
+
+              // Send this emotion to ardunio through websocket
+              socket.send(iEmotion);
+              lastEmotionSent = iEmotion;
+              console.log("Emotion sent: " + iEmotion + " " + emotion);
+            }
+
+          } else {
+            lastEmotionDetected = iEmotion;
+            lastEmotionDetectedTime = Date.now();
+          }
 
         });
 
@@ -57,24 +94,13 @@
         });
 
 
-        // Create WebSocket connection.
-        const socket = new WebSocket('ws://localhost:8765');
-
-        // Connection opened
-        socket.addEventListener('open', function (event) {
-          console.log("Socket opened")
-          //socket.send('Hello Server!');
-        });
-
-        // Listen for messages
-        socket.addEventListener('message', function (event) {
-          console.log(event.data);
-        });
 
       })
       .catch(error => console.error('Error:', error));
 
-
+    function onDetectedEmotion(emotion) {
+      console.log("Detected emotion: " + emotion);
+    }
 
   </script>
 
