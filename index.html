@@ -41,12 +41,34 @@
 
           }
 
+          // convert emtion to number
+          var emotions = ["Neutral", "Happy", "Sad", "Surprise", "Disgust", "Scared", "Angry"];
+          var iEmotion = emotions.indexOf(emotion);
+
+          // Send this emotion to ardunio through websocket
+          socket.send(iEmotion);
+
         });
 
         MphTools.CameraPrivacyPopup.setText({
           "title": "Allow us to use your camera",
           "description": "This experience is designed to be viewed with your camera on. The next screen will ask your consent to access data from your camera.",
           "url": "https://YOUR_DOMAIN/<YOUR_PRIVACY_POLICY>"
+        });
+
+
+        // Create WebSocket connection.
+        const socket = new WebSocket('ws://localhost:8765');
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+          console.log("Socket opened")
+          //socket.send('Hello Server!');
+        });
+
+        // Listen for messages
+        socket.addEventListener('message', function (event) {
+          console.log(event.data);
         });
 
       })
